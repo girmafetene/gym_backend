@@ -1,153 +1,99 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindManyOptions } from 'typeorm';
-import { User, UserRole } from '../entities/User';
+
+import { Equal } from 'typeorm';
+import { User } from '../entities/User';
 import { ApiResponse } from '../interfaces/response.interface';
+import AppDataSource from '../config/data-source';
 
-@Injectable()
 export class UserService {
-    constructor(
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
-    ) { }
+    private userRepo = AppDataSource.getRepository(User);
 
-    async create(userData: Partial<User>): Promise<ApiResponse<User>> {
+    async getAll(page = 1, limit = 10): Promise<ApiResponse<User[]>> {
         try {
-            const user = this.userRepository.create(userData);
-            await this.userRepository.save(user);
-            return {
-                success: true,
-                data: user,
-                message: 'User created successfully',
-                statusCode: 201,
-            };
-        } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-                message: 'Failed to create user',
-                statusCode: 400,
-            };
-        }
-    }
-
-    async findAll(
-        page: number = 1,
-        limit: number = 10,
-        search?: string,
-        role?: UserRole,
-    ): Promise<ApiResponse<{ users: User[]; total: number }>> {
-        try {
-            const skip = (page - 1) * limit;
-            const options: FindManyOptions<User> = {
-                skip,
+            const [data, total] = await this.userRepo.findAndCount({
+                skip: (page - 1) * limit,
                 take: limit,
-            };
+                order: { createdAt: 'DESC' },
+            });
 
-            if (search || role) {
-                options.where = {};
-                if (search) {
-                    options.where.fullName = Like(`%${search}%`);
-                }
-                if (role) {
-                    options.where.role = role;
-                }
-            }
-
-            const [users, total] = await this.userRepository.findAndCount(options);
             return {
                 success: true,
-                data: { users, total },
-                message: 'Users retrieved successfully',
+                data,
+                statusCode: 200,
+                message: 'Users fetched successfully',
             };
         } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-                message: 'Failed to retrieve users',
-                statusCode: 500,
-            };
+            return { success: false, error, statusCode: 500 };
         }
     }
 
-    async findOne(id: string): Promise<ApiResponse<User>> {
+    async getById(id: string): Promise<ApiResponse<User>> {
         try {
-            const user = await this.userRepository.findOne({ where: { id } });
+            const user = await this.userRepo.findOneBy({ id });
             if (!user) {
-                return {
-                    success: false,
-                    message: 'User not found',
-                    statusCode: 404,
-                };
+                return { success: false, statusCode: 404, message: 'User not found' };
             }
-            return {
-                success: true,
-                data: user,
-                message: 'User retrieved successfully',
-            };
+
+            return { success: true, data: user, statusCode: 200 };
         } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-                message: 'Failed to retrieve user',
-                statusCode: 500,
-            };
+            return { success: false, error, statusCode: 500 };
         }
     }
 
-    async update(
-        id: string,
-        updateData: Partial<User>,
-    ): Promise<ApiResponse<User>> {
+    async create(data: Partial<User>): Promise<ApiResponse<User>> {
         try {
-            const user = await this.userRepository.findOne({ where: { id } });
-            if (!user) {
-                return {
-                    success: false,
-                    message: 'User not found',
-                    statusCode: 404,
-                };
+            const exists = await this.userRepo.findOneBy({ email: data.email });
+            if (exists) {
+                return { success: false, statusCode: 409, message: 'Email already in use' };
             }
 
-            Object.assign(user, updateData);
-            await this.userRepository.save(user);
+            const user = this.userRepo.create(data);
+            const saved = await this.userRepo.save(user);
+
             return {
                 success: true,
-                data: user,
+                data: saved,
+                statusCode: 201,
+                message: 'User created successfully',
+            };
+        } catch (error) {
+            return { success: false, error, statusCode: 500 };
+        }
+    }
+
+    async update(id: string, data: Partial<User>): Promise<ApiResponse<User>> {
+        try {
+            await this.userRepo.update(id, data);
+            const updated = await this.userRepo.findOneBy({ id });
+
+            if (!updated) {
+                return { success: false, statusCode: 404, message: 'User not found' };
+            }
+
+            return {
+                success: true,
+                data: updated,
+                statusCode: 200,
                 message: 'User updated successfully',
             };
         } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-                message: 'Failed to update user',
-                statusCode: 400,
-            };
+            return { success: false, error, statusCode: 500 };
         }
     }
 
-    async remove(id: string): Promise<ApiResponse<void>> {
+    async delete(id: string): Promise<ApiResponse<null>> {
         try {
-            const result = await this.userRepository.delete(id);
+            const result = await this.userRepo.delete(id);
             if (result.affected === 0) {
-                return {
-                    success: false,
-                    message: 'User not found',
-                    statusCode: 404,
-                };
+                return { success: false, statusCode: 404, message: 'User not found' };
             }
+
             return {
                 success: true,
+                statusCode: 200,
                 message: 'User deleted successfully',
-                statusCode: 204,
             };
         } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-                message: 'Failed to delete user',
-                statusCode: 500,
-            };
+            return { success: false, error, statusCode: 500 };
         }
     }
 }
