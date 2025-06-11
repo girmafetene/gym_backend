@@ -1,5 +1,6 @@
 
-import { Router } from "express";
+import express, { Router } from "express";
+import path from "path";
 import memberRoutes from './member.routes';
 import membershipPlanRoutes from './membershipPlan.routes';
 import paymentRoutes from './payment.routes';
@@ -11,7 +12,15 @@ import WorkoutSessionRouter from './WorkoutSessionRouter';
 import attendanceRoutes from './attendance.routes';
 import dietItemRoutes from './diet-item.routes';
 import dietPlanRoutes from './dietPlan.routes';
+import equipmentRoutes from './equipment.routes';
+import itemRoutes from './item.routes';
 const router = Router();
+
+router.use('/uploads/equipment', express.static(path.join(__dirname, '..', 'uploads/equipment')));
+router.use('/equipment', equipmentRoutes);
+
+router.use('/uploads/items', express.static(path.join(__dirname, '..', 'uploads/items')));
+router.use('/items', itemRoutes);
 
 router.use('/members', memberRoutes);
 router.use('/membership-plans', membershipPlanRoutes);

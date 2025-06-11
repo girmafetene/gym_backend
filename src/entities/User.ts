@@ -3,8 +3,6 @@ import {
     PrimaryGeneratedColumn,
     Column,
     BaseEntity,
-    CreateDateColumn,
-    UpdateDateColumn,
     Entity
 } from 'typeorm';
 
