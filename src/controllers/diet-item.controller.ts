@@ -1,101 +1,32 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Put,
-    Delete,
-    Body,
-    Param,
-    Query,
-} from '@nestjs/common';
-
-import { ApiTags, ApiResponse as SwaggerApiResponse } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { DietItemService } from '../Service/diet-item.service';
-import { DietItem } from '../entities/DietItem';
-import { ApiResponse } from '../interfaces/response.interface';
 
-@ApiTags('diet-items')
-@Controller('diet-items')
+const service = new DietItemService();
+
 export class DietItemController {
-    constructor(private readonly dietItemService: DietItemService) { }
-
-    @Post()
-    @SwaggerApiResponse({
-        status: 201,
-        description: 'Diet item created successfully'
-    })
-    @SwaggerApiResponse({
-        status: 400,
-        description: 'Bad Request'
-    })
-    @SwaggerApiResponse({
-        status: 404,
-        description: 'Diet plan not found'
-    })
-    async create(
-        @Body() dietItemData: DietItem,
-    ): Promise<ApiResponse<DietItem>> {
-        return this.dietItemService.create(dietItemData);
+    static async create(req: Request, res: Response) {
+        const result = await service.create(req.body);
+        res.status(201).json(result);
     }
 
-    @Get('by-plan/:dietPlanId')
-    @SwaggerApiResponse({
-        status: 200,
-        description: 'Diet items retrieved successfully'
-    })
-    async findAllByDietPlan(
-        @Param('dietPlanId') dietPlanId: string,
-    ): Promise<ApiResponse<DietItem[]>> {
-        return this.dietItemService.findAllByDietPlan(dietPlanId);
+    static async getAll(req: Request, res: Response) {
+        const result = await service.findAll();
+        res.json(result);
     }
 
-    @Get(':id')
-    @SwaggerApiResponse({
-        status: 200,
-        description: 'Diet item retrieved successfully'
-    })
-    @SwaggerApiResponse({
-        status: 404,
-        description: 'Diet item not found'
-    })
-    async findOne(
-        @Param('id') id: string,
-    ): Promise<ApiResponse<DietItem>> {
-        return this.dietItemService.findOne(id);
+    static async getById(req: Request, res: Response) {
+        const result = await service.findOne(req.params.id);
+        if (!result) return res.status(404).json({ message: 'Not found' });
+        res.json(result);
     }
 
-    @Put(':id')
-    @SwaggerApiResponse({
-        status: 200,
-        description: 'Diet item updated successfully'
-    })
-    @SwaggerApiResponse({
-        status: 404,
-        description: 'Diet item/plan not found'
-    })
-    @SwaggerApiResponse({
-        status: 400,
-        description: 'Bad Request'
-    })
-    async update(
-        @Param('id') id: string,
-        @Body() updateData: Partial<DietItem>,
-    ): Promise<ApiResponse<DietItem>> {
-        return this.dietItemService.update(id, updateData);
+    static async update(req: Request, res: Response) {
+        const result = await service.update(req.params.id, req.body);
+        res.json(result);
     }
 
-    @Delete(':id')
-    @SwaggerApiResponse({
-        status: 204,
-        description: 'Diet item deleted successfully'
-    })
-    @SwaggerApiResponse({
-        status: 404,
-        description: 'Diet item not found'
-    })
-    async remove(
-        @Param('id') id: string,
-    ): Promise<ApiResponse<void>> {
-        return this.dietItemService.remove(id);
+    static async delete(req: Request, res: Response) {
+        await service.remove(req.params.id);
+        res.status(204).send();
     }
 }

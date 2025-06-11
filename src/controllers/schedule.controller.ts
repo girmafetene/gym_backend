@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import { UserService } from '../Service/user.service';
+import { ScheduleService } from '../Service/schedule.service';
 
-const service = new UserService();
 
-export class UserController {
+const service = new ScheduleService();
+
+export class ScheduleController {
     static async getAll(req: Request, res: Response) {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;

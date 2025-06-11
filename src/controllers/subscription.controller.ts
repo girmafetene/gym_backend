@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { UserService } from '../Service/user.service';
+import { SubscriptionService } from '../Service/subscription.service';
 
-const service = new UserService();
+const service = new SubscriptionService();
 
-export class UserController {
+export class SubscriptionController {
     static async getAll(req: Request, res: Response) {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;

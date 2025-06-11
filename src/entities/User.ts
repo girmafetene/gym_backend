@@ -4,9 +4,9 @@ import {
     Column,
     BaseEntity,
     CreateDateColumn,
-    UpdateDateColumn
+    UpdateDateColumn,
+    Entity
 } from 'typeorm';
-
 
 export enum UserRole {
     MEMBER = 'Member',
@@ -14,6 +14,7 @@ export enum UserRole {
     ADMIN = 'Admin'
 }
 
+@Entity()
 export abstract class User extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
@@ -36,9 +37,19 @@ export abstract class User extends BaseEntity {
     })
     role!: UserRole;
 
-    @CreateDateColumn({ default: () => new Date() })
+    @Column({ nullable: true })
+    photoPath!: string;
+
+    @Column({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+    })
     createdAt!: Date;
 
-    @UpdateDateColumn({ default: () => new Date() })
+    @Column({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+        onUpdate: 'CURRENT_TIMESTAMP',
+    })
     updatedAt!: Date;
 }

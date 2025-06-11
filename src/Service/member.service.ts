@@ -1,8 +1,8 @@
- 
+
 import { FindManyOptions } from 'typeorm';
-import { AppDataSource } from '../config/data-source';
 import { Member } from '../entities/Member';
 import { ApiResponse } from '../interfaces/response.interface';
+import AppDataSource from '../config/data-source';
 
 export class MemberService {
     private memberRepo = AppDataSource.getRepository(Member);

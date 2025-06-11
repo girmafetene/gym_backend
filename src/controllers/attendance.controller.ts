@@ -1,71 +1,36 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-} from '@nestjs/common';
-
-import { ApiTags, ApiQuery, ApiResponse as SwaggerApiResponse } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { AttendanceService } from '../Service/attendance.service';
-import { Attendance } from '../entities/Attendance';
-import { ApiResponse } from '../interfaces/response.interface';
 
-@ApiTags('attendances')
-@Controller('attendances')
-export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) { }
+export const AttendanceController = {
+  getAll: async (_req: Request, res: Response) => {
+    const data = await AttendanceService.getAll();
+    res.json({ success: true, data });
+  },
 
-  @Post()
-  @SwaggerApiResponse({ status: 201, description: 'Attendance recorded successfully' })
-  @SwaggerApiResponse({ status: 400, description: 'Bad Request' })
-  @SwaggerApiResponse({ status: 404, description: 'Member not found' })
-  async create(@Body() attendanceData: Attendance): Promise<ApiResponse<Attendance>> {
-    return this.attendanceService.create(attendanceData);
-  }
+  getById: async (req: Request, res: Response) => {
+    const data = await AttendanceService.getById(req.params.id);
+    if (!data) return res.status(404).json({ success: false, message: 'Attendance not found' });
+    res.json({ success: true, data });
+  },
 
-  @Get()
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'memberId', required: false, type: String })
-  @ApiQuery({ name: 'startDate', required: false, type: Date })
-  @ApiQuery({ name: 'endDate', required: false, type: Date })
-  @SwaggerApiResponse({ status: 200, description: 'Attendances retrieved successfully' })
-  async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('memberId') memberId?: string,
-    @Query('startDate') startDate?: Date,
-    @Query('endDate') endDate?: Date,
-  ): Promise<ApiResponse<{ attendances: Attendance[]; total: number }>> {
-    return this.attendanceService.findAll(page, limit, memberId, startDate, endDate);
-  }
+  create: async (req: Request, res: Response) => {
+    try {
+      const data = await AttendanceService.create(req.body);
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      res.status(400).json({ success: false, message: 'Invalid data', error: err });
+    }
+  },
 
-  @Get(':id')
-  @SwaggerApiResponse({ status: 200, description: 'Attendance retrieved successfully' })
-  @SwaggerApiResponse({ status: 404, description: 'Attendance not found' })
-  async findOne(@Param('id') id: string): Promise<ApiResponse<Attendance>> {
-    return this.attendanceService.findOne(id);
-  }
+  update: async (req: Request, res: Response) => {
+    const updated = await AttendanceService.update(req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Attendance not found' });
+    res.json({ success: true, data: updated });
+  },
 
-  @Put(':id')
-  @SwaggerApiResponse({ status: 200, description: 'Attendance updated successfully' })
-  @SwaggerApiResponse({ status: 404, description: 'Attendance/Member not found' })
-  @SwaggerApiResponse({ status: 400, description: 'Bad Request' })
-  async update(
-    @Param('id') id: string,
-    @Body() updateData: Partial<Attendance>,
-  ): Promise<ApiResponse<Attendance>> {
-    return this.attendanceService.update(id, updateData);
-  }
-
-  @Delete(':id')
-  @SwaggerApiResponse({ status: 204, description: 'Attendance deleted successfully' })
-  @SwaggerApiResponse({ status: 404, description: 'Attendance not found' })
-  async remove(@Param('id') id: string): Promise<ApiResponse<void>> {
-    return this.attendanceService.remove(id);
-  }
-}
+  delete: async (req: Request, res: Response) => {
+    const removed = await AttendanceService.remove(req.params.id);
+    if (!removed) return res.status(404).json({ success: false, message: 'Attendance not found' });
+    res.status(204).send();
+  },
+};

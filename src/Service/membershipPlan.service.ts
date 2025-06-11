@@ -1,4 +1,5 @@
-import { AppDataSource } from "../config/data-source";
+
+import AppDataSource from "../config/data-source";
 import { MembershipPlan } from "../entities/MembershipPlan";
 import { ApiResponse } from "../interfaces/response.interface";
 

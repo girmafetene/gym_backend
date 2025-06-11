@@ -1,11 +1,13 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import memberRoutes from './routes/member.routes';
-import membershipPlanRoutes from './routes/membershipPlan.routes';
+import express from "express";
+import routes from "./routes";
+const cors = require('cors');
+
 const app = express();
-app.use(bodyParser.json());
+app.use(cors());
+// Middleware
+app.use(express.json());
 
-app.use('/api/members', memberRoutes);
-app.use('/api/membership-plans', membershipPlanRoutes);
+// Routes
+app.use("/api", routes);
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+export default app;
